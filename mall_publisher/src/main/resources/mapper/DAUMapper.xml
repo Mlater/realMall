@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mrxc.mallpublisher.mapper.DAUMapper">
+    <select id="getTotal" resultType="Integer">
+        select count(*) from mall_dau where logdate = #{date}
+    </select>
+
+    <select id="getRealTimeData" resultMap="RealTimeData">
+        select LOGHOUR lh,count(*) ct from mall_dau where logdate = #{date} group by LOGHOUR
+    </select>
+    <resultMap id="RealTimeData" type="java.util.Map" autoMapping="true">
+     </resultMap>
+
+</mapper>
