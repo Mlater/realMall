@@ -32,7 +32,7 @@ object GmvApp {
         orderInfo.create_hour = create_timeArr(1).split(":")(0)
 
         //手机号脱敏
-        orderInfo.consignee_tel.splitAt(3)._1 + "********"
+        orderInfo.consignee_tel = orderInfo.consignee_tel.splitAt(3)._1 + "********"
 
         orderInfo
       }

@@ -54,7 +54,7 @@ public class canalClient {
             } else {
                 //有数据，message拿到的是一个Entry集合，所以我们遍历一下
                 for (CanalEntry.Entry entry : message.getEntries()) {
-                    //因为这其中的sql有很多操作类型，只需要操作数据的内容
+                    //一个Entry对应的是一条sql的执行结果，我们只需要操作数据的sql的执行结果
                     if (CanalEntry.EntryType.ROWDATA.equals(entry.getEntryType())) {
                         try {
                             //先进行反序列化,rowchange 是把entry中的storeValue反序列化的对象。
