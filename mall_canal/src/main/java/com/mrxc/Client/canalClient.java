@@ -11,6 +11,7 @@ import com.mrxc.constants.MallConstants;
 import com.mrxc.util.MyKafkaUtil;
 
 import java.net.InetSocketAddress;
+import java.util.Random;
 
 public class canalClient {
     public static void main(String[] args) {
@@ -77,21 +78,36 @@ public class canalClient {
     private static void handle(String tableName, CanalEntry.EventType eventType, CanalEntry.RowChange rowChange) {
         //筛选出订单表的数据来,并且 事件类型必须是新增及变化的
         if ("order_info".equals(tableName) && CanalEntry.EventType.INSERT.equals(eventType)) {
-            //把获取的变化的数据遍历一下，是一个RowDataList，包含多行
-            for (CanalEntry.RowData rowData : rowChange.getRowDatasList()) {
+            //发送的订单表
+            sendToKafka(rowChange,MallConstants.Mall_ORDER_INFO_TOPIC);
+        }else if("order_detail".equals(tableName) && CanalEntry.EventType.INSERT.equals(eventType)){
+            //订单详情表
+            sendToKafka(rowChange,MallConstants.Mall_ORDER_DETAIL_TOPIC);
+        }else if ("user_info".equals(tableName) && CanalEntry.EventType.INSERT.equals(eventType)){
+            //用户表
+            sendToKafka(rowChange,MallConstants.Mall_USER_INFO_TOPIC);
+        }
+    }
 
-                //创建JSON对象，把一行的数据封装进去
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("tableName", tableName);
-                //对每一行的列进行遍历，形成K，V，并进行封装进json对象中
-                for (CanalEntry.Column column : rowData.getAfterColumnsList()) {
-                    jsonObject.put(column.getName(), column.getValue());
-                }
-                //打印测试一下
-                System.out.println(jsonObject.toString());
-                //发送到Kafka
-                MyKafkaUtil.send(MallConstants.Mall_ORDER_INFO_TOPIC,jsonObject.toString());
+    private static void sendToKafka( CanalEntry.RowChange rowChange,String topic) {
+        for (CanalEntry.RowData rowData : rowChange.getRowDatasList()) {
+        //把获取的变化的数据遍历一下，是一个RowDataList，包含多行
+            //创建JSON对象，把一行的数据封装进去
+            JSONObject jsonObject = new JSONObject();
+
+            //对每一行的列进行遍历，形成K，V，并进行封装进json对象中
+            for (CanalEntry.Column column : rowData.getAfterColumnsList()) {
+                jsonObject.put(column.getName(), column.getValue());
             }
+            //打印测试一下
+            System.out.println(jsonObject.toString());
+            try {
+                Thread.sleep(new Random().nextInt(5) * 1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            //发送到Kafka
+            MyKafkaUtil.send(topic,jsonObject.toString());
         }
     }
 }

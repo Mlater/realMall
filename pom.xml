@@ -21,6 +21,8 @@
         <module>mall-logger</module>
         <module>mall-realtime</module>
         <module>dw-chart</module>
+        <module>mall_canal</module>
+        <module>mall_es</module>
     </modules>
 
     <properties>

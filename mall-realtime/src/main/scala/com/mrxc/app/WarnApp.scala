@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.alibaba.fastjson.JSON
-import com.mrxc.Utils.MyKafkaUtil
+import com.mrxc.Utils.{MyESUtil, MyKafkaUtil}
 import com.mrxc.bean.{EventLog, StartupLog, WarnLog}
 import com.mrxc.constants.MallConstants
 import org.apache.spark.SparkConf
@@ -14,7 +14,7 @@ import java.util
 
 import scala.util.control.Breaks._
 
-object WarnLogApp {
+object WarnApp {
   def main(args: Array[String]): Unit = {
 
     //创建ssc
@@ -90,11 +90,25 @@ object WarnLogApp {
     }
 
     //WarnJSON.print()
-    WarnJSON.filter(_._1).map(_._2).print()
+    val midAndminDStream = WarnJSON.filter(_._1).map(_._2).map(log => {
+      //获取到真正的预警日志后，因为在1分钟内一个mid只预警一次，所以选择mid+时间（精确到分）
+      //时间戳
+      val ts = log.ts
+
+      val min = ts / 1000 / 60
+      (log.mid + "_" + min.toString, log)
+    })
+
+    //把数据写到ES
+    midAndminDStream.foreachRDD(rdd => {
+      //按照分区写
+      rdd.foreachPartition(log => {
+        MyESUtil.insertBulk(MallConstants.Mall_Warn_APP_LOG,log.toList)
+      })
+    })
 
     //启动任务
     ssc.start()
     ssc.awaitTermination()
   }
-
 }
